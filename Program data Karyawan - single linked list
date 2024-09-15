@@ -1,0 +1,213 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Struktur node untuk menyimpan data karyawan
+struct Employee {
+    int employeeID;
+    char name[31];
+    char tempatlahir[31];
+    char tgl_lahir[11];
+    char jabatan[51];
+    struct Employee* next;
+};
+
+// Head dari linked list
+struct Employee* head = NULL;
+int employeeCount = 0;
+const int maxEmployees = 5;
+
+// Fungsi untuk membuat node karyawan baru
+struct Employee* createEmployee(int id, char name[], char tempatlahir[], char tgl_lahir[], char jabatan[]) {
+    struct Employee* newEmployee = (struct Employee*)malloc(sizeof(struct Employee));
+    newEmployee->employeeID = id;
+    strcpy(newEmployee->name, name);
+    strcpy(newEmployee->tempatlahir, tempatlahir);
+    strcpy(newEmployee->tgl_lahir, tgl_lahir);
+    strcpy(newEmployee->jabatan, jabatan);
+    newEmployee->next = NULL;
+    return newEmployee;
+}
+
+// Fungsi untuk menginputkan data karyawan dan menambahnya ke linked list
+void pushEmployee() {
+    if (employeeCount >= maxEmployees) {
+        printf("Database sudah penuh, maksimal data karyawan hanya 5 !\n");
+        return;
+    }
+
+    int id;
+    char name[31], tempatlahir[31], tgl_lahir[11], jabatan[51];
+
+    printf("Masukkan Employee ID (maks 5 digit): ");
+    scanf("%d", &id);
+    if (id > 99999 || id < 1) {
+        printf("Employee ID harus terdiri dari maksimal 5 digit angka.\n");
+        return;
+    }
+
+    getchar(); 
+    
+    printf("Masukkan Nama Lengkap (maks 30 karakter): ");
+    fgets(name, 31, stdin);
+    name[strcspn(name, "\n")] = 0; // hapus newline
+    if (strlen(name) > 30) {
+        printf("Nama tidak boleh lebih dari 30 karakter.\n");
+        return;
+    }
+
+    printf("Masukkan Tempat Lahir (maks 30 karakter): ");
+    fgets(tempatlahir, 31, stdin);
+    tempatlahir[strcspn(tempatlahir, "\n")] = 0; // hapus newline
+    if (strlen(tempatlahir) > 30) {
+        printf("Tempat Lahir tidak boleh lebih dari 30 karakter.\n");
+        return;
+    }
+
+    printf("Masukkan Tanggal Lahir (format: DD/MM/YYYY): ");
+    fgets(tgl_lahir, 11, stdin);
+    tgl_lahir[strcspn(tgl_lahir, "\n")] = 0; // hapus newline
+    if (strlen(tgl_lahir) != 10) {
+        printf("Tanggal Lahir harus dalam format DD/MM/YYYY.\n");
+        return;
+    }
+
+    printf("Masukkan Jabatan (maks 50 karakter): ");
+    getchar(); 
+    fgets(jabatan, 51, stdin);
+    jabatan[strcspn(jabatan, "\n")] = 0; // hapus newline
+    if (strlen(jabatan) > 50) {
+        printf("Jabatan tidak boleh lebih dari 50 karakter.\n");
+        return;
+    }
+
+    // Buat karyawan baru
+    struct Employee* newEmployee = createEmployee(id, name, tempatlahir, tgl_lahir, jabatan);
+
+    // Insert berdasarkan urutan Employee ID
+    if (head == NULL || head->employeeID >= newEmployee->employeeID) {
+        newEmployee->next = head;
+        head = newEmployee;
+    } else {
+        struct Employee* current = head;
+        while (current->next != NULL && current->next->employeeID < newEmployee->employeeID) {
+            current = current->next;
+        }
+        newEmployee->next = current->next;
+        current->next = newEmployee;
+    }
+    employeeCount++;
+    printf("Data karyawan berhasil ditambahkan!\n");
+}
+
+// Fungsi untuk menampilkan semua data karyawan
+void tampilkanKaryawan() {
+    if (head == NULL) {
+        printf("Database kosong.\n");
+        return;
+    }
+
+    struct Employee* current = head;
+    printf("Daftar Karyawan:\n");
+    printf("ID\tNama\t\tTempat Lahir\tTanggal Lahir\tJabatan\n");
+    while (current != NULL) {
+        printf("%d\t%s\t%s\t%s\t%s\n", current->employeeID, current->name, current->tempatlahir, current->tgl_lahir, current->jabatan);
+        current = current->next;
+    }
+}
+
+// Fungsi untuk menghapus karyawan berdasarkan Employee ID
+void hapusKaryawan() {
+    if (head == NULL) {
+        printf("Database kosong.\n");
+        return;
+    }
+
+    int id;
+    printf("Masukkan Employee ID yang ingin dihapus: ");
+    scanf("%d", &id);
+
+    struct Employee* temp = head;
+    struct Employee* prev = NULL;
+
+    // Jika karyawan yang dihapus adalah head
+    if (temp != NULL && temp->employeeID == id) {
+        head = temp->next;
+        free(temp);
+        employeeCount--;
+        printf("Karyawan dengan ID %d berhasil dihapus.\n", id);
+        return;
+    }
+
+    // Cari karyawan yang ingin dihapus
+    while (temp != NULL && temp->employeeID != id) {
+        prev = temp;
+        temp = temp->next;
+    }
+
+    // Jika karyawan tidak ditemukan
+    if (temp == NULL) {
+        printf("Karyawan dengan ID %d tidak ditemukan.\n", id);
+        return;
+    }
+
+    // Hapus karyawan
+    prev->next = temp->next;
+    free(temp);
+    employeeCount--;
+    printf("Karyawan dengan ID %d berhasil dihapus.\n", id);
+}
+
+// Fungsi untuk menghapus semua karyawan
+void hapusSemuaKaryawan() {
+    struct Employee* current = head;
+    struct Employee* nextNode;
+
+    while (current != NULL) {
+        nextNode = current->next;
+        free(current);
+        current = nextNode;
+    }
+
+    head = NULL;
+    employeeCount = 0;
+    printf("Semua data karyawan berhasil dihapus.\n");
+}
+
+// Fungsi utama (menu program)
+int main() {
+    int choice;
+
+    do {
+        printf("\nMenu Data Karyawan:\n");
+        printf("1. Input data karyawan\n");
+        printf("2. Tampilkan semua karyawan\n");
+        printf("3. Hapus karyawan berdasarkan Employee ID\n");
+        printf("4. Hapus semua data karyawan\n");
+        printf("5. Exit \n");
+        printf("Pilihan: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                pushEmployee();
+                break;
+            case 2:
+                tampilkanKaryawan();
+                break;
+            case 3:
+                hapusKaryawan();
+                break;
+            case 4:
+                hapusSemuaKaryawan();
+                break;
+            case 5:
+                printf("Keluar dari program...\n");
+                break;
+            default:
+                printf("Pilihan tidak valid!\n");
+        }
+    } while (choice != 5);
+
+    return 0;
+}
